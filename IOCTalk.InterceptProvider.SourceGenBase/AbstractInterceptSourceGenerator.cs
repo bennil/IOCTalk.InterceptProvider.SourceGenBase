@@ -67,7 +67,7 @@ namespace IOCTalk.InterceptProvider.SourceGenBase
 #if DEBUG
             LogToFileHelper.WriteLog($"Intercept registration count: {interceptProviderRegistrations.Length}; Target assembly: {targetAssemblyName}");
 #endif            
-            Dictionary<ITypeSymbol, string> interfaceImplementationMapping = new Dictionary<ITypeSymbol, string>();
+            Dictionary<ITypeSymbol, string> interfaceImplementationMapping = new Dictionary<ITypeSymbol, string>(SymbolEqualityComparer.Default);
             foreach (var interfaceType in interceptProviderRegistrations)
             {
                 string className;
@@ -200,6 +200,8 @@ namespace {targetNamespace}
             StringBuilder source = new StringBuilder();
 
             source.AppendLine("using System;");
+            source.AppendLine("using System.Collections.Generic;");
+            source.AppendLine("using System.Threading;");
             source.AppendLine($"using {interfaceType.ContainingNamespace};");
 
             AppendInterceptUsings(source, interfaceType);
@@ -209,7 +211,7 @@ namespace {targetNamespace}
             source.AppendLine(targetNamespace);
             source.AppendLine("{");
             source.Append($" public class {className} : {interfaceType.Name}, IDisposable");
-            
+
             AppendInterceptInheritance(source, interfaceType);
 
             source.AppendLine();
@@ -523,19 +525,18 @@ namespace {targetNamespace}
                 methodSource.Append(sbParameterValues);
             methodSource.AppendLine(");");
 
-            //methodSource.AppendLine();
 
-            if (outParameters != null)
-            {
-                // assign out parameters
+            //if (outParameters != null)
+            //{
+            //    // assign out parameters
 
-                for (int outParamIndex = 0; outParamIndex < outParameters.Count; outParamIndex++)
-                {
-                    var outParam = outParameters[outParamIndex];
-                    methodSource.AppendFormat("{0}{1} = ({2})parameterValues[{3}];", MethodLineIntention, outParam.Name, GetSourceCodeTypeName(outParam.Type), outParamIndex);
-                    methodSource.AppendLine();
-                }
-            }
+            //    for (int outParamIndex = 0; outParamIndex < outParameters.Count; outParamIndex++)
+            //    {
+            //        var outParam = outParameters[outParamIndex];
+            //        methodSource.AppendFormat("{0}{1} = ({2})parameterValues[{3}];", MethodLineIntention, outParam.Name, GetSourceCodeTypeName(outParam.Type), outParamIndex);
+            //        methodSource.AppendLine();
+            //    }
+            //}
 
             AppendInterceptMethodAfterNestedCall(methodSource, interfaceType, method);
 
