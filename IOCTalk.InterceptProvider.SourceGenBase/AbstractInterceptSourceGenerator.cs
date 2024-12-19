@@ -322,7 +322,7 @@ namespace {targetNamespace}
         }
 
 
-        public static string GetUniqueMethodName(IMethodSymbol method) => $"{method.Name}_{string.Join("_", method.Parameters.Select(p => p.Type.ToString()))}";
+        public static string GetUniqueMethodName(IMethodSymbol method) => $"{method.Name}_{Math.Abs(string.Join("_", method.Parameters.Select(p => p.Type.ToString())).GetHashCode())}";
 
 
         public static string FirstToLower(string input)
