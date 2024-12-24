@@ -221,7 +221,7 @@ namespace {targetNamespace}
             source.AppendLine();
             source.AppendLine($"{MethodBodyIntention}private {interfaceType.Name} {InterceptedServiceFieldName};");
             source.AppendLine($"{MethodBodyIntention}private ICallMonitoringHost {MonitorHostFieldName};");
-            
+
             AppendInterceptFieldDefinition(source, interfaceType);
 
             source.AppendLine();
@@ -384,13 +384,20 @@ namespace {targetNamespace}
             {
                 if (member is IMethodSymbol method)
                 {
-                    CreateInterceptInterfaceMemberMethod(mainSource, interfaceType, method);
-                    methods.Add(method);
+                    bool methodCallingSignatureAlreadyAdded = methods.Any(m => m.Name == method.Name
+                                                        && m.Parameters.Length == method.Parameters.Length
+                                                        && m.Parameters.SequenceEqual(method.Parameters, (p1, p2) => SymbolEqualityComparer.Default.Equals(p1.Type, p2.Type)));
+
+                    if (methodCallingSignatureAlreadyAdded == false)
+                    {
+                        CreateInterceptInterfaceMemberMethod(mainSource, interfaceType, method, false);
+                        methods.Add(method);
+                    }
                 }
             }
         }
 
-        private void CreateInterceptInterfaceMemberMethod(StringBuilder mainSource, ITypeSymbol interfaceType, IMethodSymbol method)
+        private void CreateInterceptInterfaceMemberMethod(StringBuilder mainSource, ITypeSymbol interfaceType, IMethodSymbol method, bool isExplicitImplementation)
         {
             StringBuilder methodSource = new StringBuilder();
 
@@ -419,12 +426,15 @@ namespace {targetNamespace}
 
             AppendInterceptMethodPreDefinition(methodSource, interfaceType, method);
 
+            string methodName = isExplicitImplementation ? $"{interfaceType}.{method.Name}" : method.Name;
+            string publicPrefix = isExplicitImplementation ? "" : "public";
+
             if (isAsyncAwait)
             {
-                methodSource.AppendFormat("{0}public async {1} {2}(", MethodBodyIntention, returnType, method.Name);
+                methodSource.Append($"{MethodBodyIntention}{publicPrefix} async {returnType} {methodName}(");
             }
             else
-                methodSource.AppendFormat("{0}public {1} {2}(", MethodBodyIntention, returnType, method.Name);
+                methodSource.AppendFormat($"{MethodBodyIntention}{publicPrefix} {returnType} {methodName}(");
 
 
 
