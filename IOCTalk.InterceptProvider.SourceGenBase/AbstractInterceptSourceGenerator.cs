@@ -375,6 +375,8 @@ namespace {targetNamespace}
                 CreateInterceptInterfaceMethodForTyp(mainSource, baseInterface, methods);
             }
 
+            methods = methods.OrderBy(ob => ob.Name).ToList();
+
             return methods;
         }
 
